@@ -4,6 +4,8 @@ const emit = defineEmits<{
   (e: 'directMessage', chatId: string): void
 }>()
 
+const handleUnauthorized = inject<() => void>('handleUnauthorized', () => {})
+
 const subscribers = ref<any[]>([])
 const isLoading = ref(false)
 const searchQuery = ref('')
@@ -23,7 +25,11 @@ async function fetchSubscribers() {
     })
     subscribers.value = res.subscribers || []
   } catch (err: any) {
-    emit('toast', `Failed to load subscribers: ${err.message}`, 'error')
+    if (err.statusCode === 401 || err.status === 401) {
+      handleUnauthorized()
+    } else {
+      emit('toast', `Failed to load subscribers: ${err.data?.statusMessage || err.message}`, 'error')
+    }
   } finally {
     isLoading.value = false
   }

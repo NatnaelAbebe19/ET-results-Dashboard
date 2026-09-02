@@ -8,6 +8,8 @@ const emit = defineEmits<{
   (e: 'toast', msg: string, type: 'success' | 'error' | 'info'): void
 }>()
 
+const handleUnauthorized = inject<() => void>('handleUnauthorized', () => {})
+
 const searchQuery = ref('')
 const selectedType = ref('ALL')
 const page = ref(1)
@@ -44,7 +46,11 @@ async function fetchResults() {
     results.value = res.results || []
     total.value = res.total || 0
   } catch (err: any) {
-    emit('toast', `Failed to load results: ${err.message}`, 'error')
+    if (err.statusCode === 401 || err.status === 401) {
+      handleUnauthorized()
+    } else {
+      emit('toast', `Failed to load results: ${err.data?.statusMessage || err.message}`, 'error')
+    }
   } finally {
     isLoading.value = false
   }

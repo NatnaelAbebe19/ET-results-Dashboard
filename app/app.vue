@@ -10,6 +10,12 @@ const currentTab = ref('overview')
 const isSidebarOpen = ref(false)
 const isRefreshing = ref(false)
 
+// Global 401 handler — called by any child component that receives Unauthorized
+function handleUnauthorized() {
+  isAuthenticated.value = false
+}
+provide('handleUnauthorized', handleUnauthorized)
+
 // Modals
 const viewingResultId = ref<string | null>(null)
 const isHealthModalOpen = ref(false)
