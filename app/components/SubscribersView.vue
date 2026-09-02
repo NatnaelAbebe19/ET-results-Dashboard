@@ -12,6 +12,9 @@ const searchQuery = ref('')
 const newChatId = ref('')
 const isAdding = ref(false)
 
+// Per-row user profile lookup
+const profiles = ref<Record<string, { loading: boolean; data: any | null; error: string | null }>>({})
+
 async function fetchSubscribers() {
   isLoading.value = true
   try {
@@ -24,6 +27,8 @@ async function fetchSubscribers() {
       query: queryParams
     })
     subscribers.value = res.subscribers || []
+    // Reset profiles on reload
+    profiles.value = {}
   } catch (err: any) {
     if (err.statusCode === 401 || err.status === 401) {
       handleUnauthorized()
@@ -32,6 +37,22 @@ async function fetchSubscribers() {
     }
   } finally {
     isLoading.value = false
+  }
+}
+
+async function lookupProfile(chatId: string) {
+  if (profiles.value[chatId]?.data || profiles.value[chatId]?.loading) return
+
+  profiles.value[chatId] = { loading: true, data: null, error: null }
+  try {
+    const res: any = await $fetch(`/api/telegram/user/${chatId}`)
+    if (res.ok) {
+      profiles.value[chatId] = { loading: false, data: res, error: null }
+    } else {
+      profiles.value[chatId] = { loading: false, data: null, error: res.error || 'Could not resolve user' }
+    }
+  } catch (err: any) {
+    profiles.value[chatId] = { loading: false, data: null, error: err.data?.statusMessage || err.message }
   }
 }
 
@@ -90,8 +111,17 @@ function copyChatId(chatId: string) {
 
 function exportCsv() {
   if (subscribers.value.length === 0) return
-  const headers = ['Chat_ID', 'Subscribed_At']
-  const rows = subscribers.value.map(s => [s.chat_id, `"${s.subscribed_at || ''}"`])
+  const headers = ['Chat_ID', 'Display_Name', 'Username', 'Type', 'Subscribed_At']
+  const rows = subscribers.value.map(s => {
+    const p = profiles.value[s.chat_id]?.data
+    return [
+      s.chat_id,
+      `"${p?.displayName || ''}"`,
+      p?.username || '',
+      p?.type || 'unknown',
+      `"${s.subscribed_at || ''}"`
+    ]
+  })
   const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n')
   const encodedUri = encodeURI(csvContent)
   const link = document.createElement('a')
@@ -111,6 +141,10 @@ function formatDate(dateStr: string) {
   } catch {
     return dateStr
   }
+}
+
+function isGroup(type: string) {
+  return type === 'group' || type === 'supergroup' || type === 'channel'
 }
 
 defineExpose({ refresh: fetchSubscribers })
@@ -192,19 +226,21 @@ defineExpose({ refresh: fetchSubscribers })
           <thead>
             <tr>
               <th>Telegram Chat ID</th>
+              <th>Identity</th>
               <th>Status</th>
-              <th>Subscription Timestamp</th>
+              <th>Subscribed</th>
               <th style="text-align: right;">Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="sub in subscribers" :key="sub.chat_id">
-              <td class="font-mono" style="font-size: 13.5px; font-weight: 600;">
-                <div class="flex-gap-2">
+              <!-- Chat ID -->
+              <td class="font-mono" style="font-size: 13px; font-weight: 600;">
+                <div class="flex-gap-2" style="align-items: center;">
                   <span>{{ sub.chat_id }}</span>
                   <button 
                     @click="copyChatId(sub.chat_id)" 
-                    style="opacity: 0.6; cursor: pointer;" 
+                    style="opacity: 0.5; cursor: pointer; font-size: 12px;" 
                     title="Copy Chat ID"
                   >
                     📋
@@ -212,24 +248,68 @@ defineExpose({ refresh: fetchSubscribers })
                 </div>
               </td>
 
-              <td>
-                <span class="badge badge-green">
-                  ● Active Listener
-                </span>
+              <!-- Identity: name + username resolved from Telegram -->
+              <td style="min-width: 180px;">
+                <div v-if="!profiles[sub.chat_id]">
+                  <button 
+                    class="btn btn-secondary btn-sm" 
+                    @click="lookupProfile(sub.chat_id)"
+                    style="font-size: 11px; padding: 3px 9px;"
+                  >
+                    🔍 Lookup
+                  </button>
+                </div>
+                <div v-else-if="profiles[sub.chat_id].loading" style="font-size: 12px; color: var(--text-muted);">
+                  ⏳ Resolving...
+                </div>
+                <div v-else-if="profiles[sub.chat_id].error" style="font-size: 11px; color: var(--danger);" :title="profiles[sub.chat_id].error!">
+                  ⚠️ Not accessible
+                </div>
+                <div v-else-if="profiles[sub.chat_id].data" style="line-height: 1.4;">
+                  <!-- Group/Channel -->
+                  <template v-if="isGroup(profiles[sub.chat_id].data.type)">
+                    <div style="font-weight: 600; font-size: 13px;">
+                      {{ profiles[sub.chat_id].data.type === 'channel' ? '📢' : '👥' }}
+                      {{ profiles[sub.chat_id].data.title }}
+                    </div>
+                    <div v-if="profiles[sub.chat_id].data.username" style="font-size: 11px; color: #38bdf8;">
+                      {{ profiles[sub.chat_id].data.username }}
+                    </div>
+                    <div v-if="profiles[sub.chat_id].data.memberCount" style="font-size: 11px; color: var(--text-muted);">
+                      {{ profiles[sub.chat_id].data.memberCount.toLocaleString() }} members
+                    </div>
+                  </template>
+                  <!-- Private User -->
+                  <template v-else>
+                    <div style="font-weight: 600; font-size: 13px;">
+                      👤 {{ profiles[sub.chat_id].data.displayName }}
+                    </div>
+                    <div v-if="profiles[sub.chat_id].data.username" style="font-size: 11px; color: #38bdf8;">
+                      {{ profiles[sub.chat_id].data.username }}
+                    </div>
+                  </template>
+                </div>
               </td>
 
-              <td style="color: var(--text-muted); font-size: 12.5px;">
+              <!-- Status -->
+              <td>
+                <span class="badge badge-green">● Active</span>
+              </td>
+
+              <!-- Date -->
+              <td style="color: var(--text-muted); font-size: 12px;">
                 {{ formatDate(sub.subscribed_at) }}
               </td>
 
+              <!-- Actions -->
               <td style="text-align: right;">
                 <div class="flex-gap-2" style="justify-content: flex-end;">
                   <button 
                     class="btn btn-secondary btn-sm" 
                     @click="emit('directMessage', sub.chat_id)"
-                    title="Compose test alert to this user"
+                    title="Send a direct message to this user"
                   >
-                    Direct Message
+                    ✉️ Message
                   </button>
 
                   <button 
@@ -237,7 +317,7 @@ defineExpose({ refresh: fetchSubscribers })
                     @click="removeSubscriber(sub.chat_id)"
                     title="Unsubscribe user"
                   >
-                    🗑️ Remove
+                    🗑️
                   </button>
                 </div>
               </td>
