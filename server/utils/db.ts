@@ -14,8 +14,19 @@ export function getDbPool(): pg.Pool {
     return pool
   }
 
-  const config = useRuntimeConfig()
-  let connectionString = config.databaseUrl || process.env.DATABASE_URL || ''
+  // Nuxt runtimeConfig is available at request time, but process.env is always reliable
+  let connectionString = ''
+  try {
+    const config = useRuntimeConfig()
+    connectionString = (config.databaseUrl as string) || ''
+  } catch {
+    // useRuntimeConfig may not be available outside H3 context
+  }
+
+  // Always fall back to process.env directly
+  if (!connectionString) {
+    connectionString = process.env.DATABASE_URL || process.env.NUXT_DATABASE_URL || ''
+  }
 
   if (!connectionString) {
     throw new Error('DATABASE_URL is not configured in environment or runtimeConfig')
