@@ -2,10 +2,16 @@ export default defineEventHandler(async (event) => {
   requireAdminAuth(event)
 
   const urlQuery = getQuery(event)
-  const search = (urlQuery.q as string)?.trim() || ''
-  const typeFilter = (urlQuery.type as string)?.trim() || ''
-  const limit = Math.min(Math.max(parseInt((urlQuery.limit as string) || '50', 10), 1), 200)
-  const offset = Math.max(parseInt((urlQuery.offset as string) || '0', 10), 0)
+  const rawQ = urlQuery.q
+  const search = typeof rawQ === 'string' ? rawQ.trim() : ''
+  const rawType = urlQuery.type
+  const typeFilter = typeof rawType === 'string' ? rawType.trim() : ''
+
+  const rawLimit = typeof urlQuery.limit === 'string' ? parseInt(urlQuery.limit, 10) : 20
+  const limit = Math.min(Math.max(isNaN(rawLimit) ? 20 : rawLimit, 1), 200)
+
+  const rawOffset = typeof urlQuery.offset === 'string' ? parseInt(urlQuery.offset, 10) : 0
+  const offset = Math.max(isNaN(rawOffset) ? 0 : rawOffset, 0)
 
   try {
     let whereClauses: string[] = []
@@ -52,7 +58,13 @@ export default defineEventHandler(async (event) => {
         tr.date_time,
         tr.updated_at,
         CASE WHEN a.id IS NOT NULL THEN true ELSE false END as has_announcement,
-        COALESCE(jsonb_array_length(a.data->'candidates'), 0) as candidate_count
+        COALESCE(
+          CASE 
+            WHEN jsonb_typeof(a.data->'candidates') = 'array' THEN jsonb_array_length(a.data->'candidates')
+            ELSE 0 
+          END, 
+          0
+        ) as candidate_count
       FROM tracked_results tr
       LEFT JOIN announcements a ON tr.id = a.id
       ${whereSql}
@@ -68,6 +80,7 @@ export default defineEventHandler(async (event) => {
       results: resultsRes.rows
     }
   } catch (err: any) {
+    console.error('Error in /api/results:', err)
     throw createError({
       statusCode: 500,
       statusMessage: `Database error: ${err.message}`

@@ -13,8 +13,13 @@ const isAdding = ref(false)
 async function fetchSubscribers() {
   isLoading.value = true
   try {
+    const queryParams: Record<string, any> = {}
+    const q = searchQuery.value.trim()
+    if (q) {
+      queryParams.q = q
+    }
     const res: any = await $fetch('/api/subscribers', {
-      query: { q: searchQuery.value }
+      query: queryParams
     })
     subscribers.value = res.subscribers || []
   } catch (err: any) {

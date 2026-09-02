@@ -2,7 +2,8 @@ export default defineEventHandler(async (event) => {
   requireAdminAuth(event)
 
   const urlQuery = getQuery(event)
-  const search = (urlQuery.q as string)?.trim() || ''
+  const rawQ = urlQuery.q
+  const search = typeof rawQ === 'string' ? rawQ.trim() : ''
 
   try {
     let whereClause = ''
@@ -25,6 +26,7 @@ export default defineEventHandler(async (event) => {
       subscribers: res.rows
     }
   } catch (err: any) {
+    console.error('Error in /api/subscribers:', err)
     throw createError({
       statusCode: 500,
       statusMessage: `Failed to fetch subscribers: ${err.message}`

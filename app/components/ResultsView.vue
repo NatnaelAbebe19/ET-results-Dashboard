@@ -29,13 +29,17 @@ async function fetchResults() {
   isLoading.value = true
   try {
     const offset = (page.value - 1) * limit
+    const queryParams: Record<string, any> = {
+      type: selectedType.value,
+      limit,
+      offset
+    }
+    const q = searchQuery.value.trim()
+    if (q) {
+      queryParams.q = q
+    }
     const res: any = await $fetch('/api/results', {
-      query: {
-        q: searchQuery.value,
-        type: selectedType.value,
-        limit,
-        offset
-      }
+      query: queryParams
     })
     results.value = res.results || []
     total.value = res.total || 0
