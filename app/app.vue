@@ -179,6 +179,7 @@ onMounted(() => {
           <SubscribersView 
             v-else-if="currentTab === 'subscribers'"
             @directMessage="handleDirectMessage"
+            @navigate="currentTab = $event"
             @toast="showToast"
           />
 
