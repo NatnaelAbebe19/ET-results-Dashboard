@@ -127,7 +127,7 @@ async function sendBroadcast() {
         </div>
 
         <!-- Target Selector (TailAdmin custom segmented box) -->
-        <div style="margin-bottom: 18px; padding: 14px 16px; background: #0f172a; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+        <div style="margin-bottom: 18px; padding: 14px 16px; background: var(--bg-surface-elevated); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
           <div style="font-weight: 600; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 10px;">
             Audience Scope
           </div>
@@ -166,7 +166,7 @@ async function sendBroadcast() {
         </div>
 
         <!-- Inline Keyboard Button Config -->
-        <div style="padding: 16px; background: #0f172a; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); margin-bottom: 20px;">
+        <div style="padding: 16px; background: var(--bg-surface-elevated); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); margin-bottom: 20px;">
           <div style="font-weight: 600; font-size: 13px; margin-bottom: 12px; color: var(--text-primary);">
             Action Button (Optional)
           </div>
@@ -209,7 +209,7 @@ async function sendBroadcast() {
         <!-- Delivery Results Report -->
         <div 
           v-if="sendResult" 
-          style="margin-top: 16px; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; background: #0f172a; border: 1px solid var(--border-subtle);"
+          style="margin-top: 16px; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle);"
         >
           <div style="font-weight: 600; color: var(--text-primary);">
             Delivery Result: {{ sendResult.sent }} sent / {{ sendResult.failed }} failed (Total {{ sendResult.total }})

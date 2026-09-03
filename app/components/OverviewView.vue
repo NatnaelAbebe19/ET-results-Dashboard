@@ -205,7 +205,7 @@ function formatDate(dateStr: string) {
               v-for="sub in data.recentSubscribers" 
               :key="sub.chat_id"
               class="flex-between"
-              style="padding: 10px 14px; background: #0f172a; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);"
+              style="padding: 10px 14px; background: var(--bg-surface-elevated); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);"
             >
               <div style="display: flex; align-items: center; gap: 10px;">
                 <div style="width: 32px; height: 32px; border-radius: var(--radius-full); background: var(--primary-subtle); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">

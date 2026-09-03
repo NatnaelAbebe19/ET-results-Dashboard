@@ -70,7 +70,7 @@ onMounted(() => {
           </div>
 
           <!-- Service 1: Neon DB -->
-          <div class="card" style="padding: 14px 18px; background: #0f172a;">
+          <div class="card" style="padding: 14px 18px; background: var(--bg-surface-elevated);">
             <div class="flex-between">
               <div style="display: flex; align-items: center; gap: 12px;">
                 <div style="width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--primary-subtle); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700;">
@@ -92,7 +92,7 @@ onMounted(() => {
           </div>
 
           <!-- Service 2: Telegram Bot -->
-          <div class="card" style="padding: 14px 18px; background: #0f172a;">
+          <div class="card" style="padding: 14px 18px; background: var(--bg-surface-elevated);">
             <div class="flex-between">
               <div style="display: flex; align-items: center; gap: 12px;">
                 <div style="width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--primary-subtle); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700;">
@@ -116,7 +116,7 @@ onMounted(() => {
           </div>
 
           <!-- Service 3: Render Web App -->
-          <div class="card" style="padding: 14px 18px; background: #0f172a;">
+          <div class="card" style="padding: 14px 18px; background: var(--bg-surface-elevated);">
             <div class="flex-between">
               <div style="display: flex; align-items: center; gap: 12px;">
                 <div style="width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--primary-subtle); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700;">

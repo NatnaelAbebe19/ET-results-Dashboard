@@ -2,12 +2,15 @@
    TAILADMIN & TAILDROPS INSPIRED DESIGN SYSTEM
    Modern, ultra-clean SaaS Dashboard with a refined 2-3 Color Palette:
    - Primary: Electric Indigo (#465FFF) & Tints
-   - Neutral: Modern Slate Scale (#0B0F19, #111827, #1F2937, #9CA3AF, #F9FAFB)
+   - Neutral: Modern Slate Scale (Dual Mode: Dark & Day)
    - Status Accent: Crisp Emerald (#10B981) & Minimal Rose (#EF4444)
    ═══════════════════════════════════════════════════════════════════ */
 
-:root {
-  /* 1. Primary Brand (TailAdmin Electric Indigo) */
+/* ─── 1. Dark Mode (Default) ──────────────────────────────────────────── */
+:root,
+html[data-theme="dark"],
+html.dark {
+  /* Primary Brand (TailAdmin Electric Indigo) */
   --primary: #465fff;
   --primary-hover: #364fe8;
   --primary-active: #2a3ecc;
@@ -17,12 +20,13 @@
   --primary-border: rgba(70, 95, 255, 0.25);
   --primary-glow: 0 0 20px rgba(70, 95, 255, 0.28);
 
-  /* 2. Neutral Slate Palette (TailAdmin / Taildrops dark surface) */
+  /* Neutral Slate Palette (Dark) */
   --bg-dark: #0b0f19;
   --bg-surface: #111827;
   --bg-surface-elevated: #162032;
   --bg-surface-hover: #1e293b;
   --bg-input: #0f172a;
+  --bg-header: rgba(17, 24, 39, 0.85);
 
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-medium: rgba(255, 255, 255, 0.12);
@@ -33,7 +37,7 @@
   --text-muted: #6b7280;
   --text-dim: #4b5563;
 
-  /* 3. Functional Status Colors (Used selectively for system states) */
+  /* Functional Status Colors */
   --success: #10b981;
   --success-light: rgba(16, 185, 129, 0.1);
   --success-border: rgba(16, 185, 129, 0.25);
@@ -47,13 +51,74 @@
   --warning-light: rgba(245, 158, 11, 0.1);
   --warning-border: rgba(245, 158, 11, 0.25);
 
-  /* Elevation & Shadows */
+  /* Shadows */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.25);
   --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.5);
 
-  /* Layout Constants */
+  /* Scrollbar */
+  --scrollbar-thumb: #1f2937;
+  --scrollbar-hover: #374151;
+}
+
+/* ─── 2. Day / Light Mode (TailAdmin Light Palette) ────────────────────── */
+html[data-theme="light"],
+html.light {
+  /* Primary Brand */
+  --primary: #465fff;
+  --primary-hover: #364fe8;
+  --primary-active: #2a3ecc;
+  --primary-light: #465fff;
+  --primary-subtle: rgba(70, 95, 255, 0.08);
+  --primary-subtle-hover: rgba(70, 95, 255, 0.14);
+  --primary-border: rgba(70, 95, 255, 0.2);
+  --primary-glow: 0 0 20px rgba(70, 95, 255, 0.15);
+
+  /* Neutral Light Slate Scale */
+  --bg-dark: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f8fafc;
+  --bg-surface-hover: #f1f5f9;
+  --bg-input: #ffffff;
+  --bg-header: rgba(255, 255, 255, 0.88);
+
+  --border-subtle: #e2e8f0;
+  --border-medium: #cbd5e1;
+  --border-focus: var(--primary);
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-dim: #94a3b8;
+
+  /* Functional Status Colors */
+  --success: #059669;
+  --success-light: rgba(16, 185, 129, 0.1);
+  --success-border: rgba(16, 185, 129, 0.25);
+
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --danger-light: rgba(239, 68, 68, 0.08);
+  --danger-border: rgba(239, 68, 68, 0.2);
+
+  --warning: #d97706;
+  --warning-light: rgba(245, 158, 11, 0.1);
+  --warning-border: rgba(245, 158, 11, 0.25);
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+
+  /* Scrollbar */
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-hover: #94a3b8;
+}
+
+/* Common Layout Constants */
+:root {
   --sidebar-width: 270px;
   --header-height: 68px;
   --radius-xs: 6px;
@@ -84,15 +149,16 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Subtle Taildrops fine mesh background */
+/* Subtle Taildrops fine ambient mesh */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   background-image: 
-    radial-gradient(circle at 10% 10%, rgba(70, 95, 255, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 10% 10%, rgba(70, 95, 255, 0.04) 0%, transparent 40%),
     radial-gradient(circle at 90% 90%, rgba(70, 95, 255, 0.03) 0%, transparent 40%);
   pointer-events: none;
   z-index: -1;
@@ -111,7 +177,7 @@ a {
   transition: var(--transition-fast);
 }
 a:hover {
-  color: #fff;
+  color: var(--primary-hover);
 }
 
 button, input, select, textarea {
@@ -132,11 +198,11 @@ button, input, select, textarea {
   background: var(--bg-dark);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1f2937;
+  background: var(--scrollbar-thumb);
   border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #374151;
+  background: var(--scrollbar-hover);
 }
 
 /* ─── Layout Shell ────────────────────────────────────────────────────── */
@@ -174,10 +240,11 @@ button, input, select, textarea {
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
-  background: rgba(17, 24, 39, 0.85);
+  background: var(--bg-header);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .header-left {
@@ -229,7 +296,7 @@ button, input, select, textarea {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* Health status pill with live emerald indicator */
@@ -243,7 +310,7 @@ button, input, select, textarea {
   font-weight: 500;
   background: var(--success-light);
   border: 1px solid var(--success-border);
-  color: #34d399;
+  color: var(--success);
   cursor: pointer;
   transition: var(--transition-fast);
 }
@@ -253,12 +320,12 @@ button, input, select, textarea {
 .health-pill.degraded {
   background: var(--warning-light);
   border-color: var(--warning-border);
-  color: #fbbf24;
+  color: var(--warning);
 }
 .health-pill.down {
   background: var(--danger-light);
   border-color: var(--danger-border);
-  color: #f87171;
+  color: var(--danger);
 }
 
 .pulse-dot {
@@ -285,9 +352,9 @@ button, input, select, textarea {
   z-index: 50;
   display: flex;
   flex-direction: column;
-  background: #111827;
+  background: var(--bg-surface);
   border-right: 1px solid var(--border-subtle);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, border-color 0.2s ease;
 }
 
 .sidebar-header {
@@ -360,7 +427,7 @@ button, input, select, textarea {
   text-align: left;
 }
 .nav-item:hover {
-  background: var(--bg-surface-elevated);
+  background: var(--bg-surface-hover);
   color: var(--text-primary);
 }
 .nav-item.active {
@@ -396,7 +463,7 @@ button, input, select, textarea {
 .sidebar-footer {
   padding: 16px;
   border-top: 1px solid var(--border-subtle);
-  background: rgba(17, 24, 39, 0.4);
+  background: var(--bg-surface);
 }
 
 /* ─── TailAdmin Cards & Surfaces ──────────────────────────────────────── */
@@ -527,19 +594,19 @@ button, input, select, textarea {
 }
 
 .btn-secondary {
-  background: #1f2937;
+  background: var(--bg-surface-elevated);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
 }
 .btn-secondary:hover:not(:disabled) {
-  background: #374151;
+  background: var(--bg-surface-hover);
   border-color: var(--border-medium);
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .btn-danger {
   background: var(--danger-light);
-  color: #f87171;
+  color: var(--danger);
   border: 1px solid var(--danger-border);
 }
 .btn-danger:hover:not(:disabled) {
@@ -569,30 +636,30 @@ button, input, select, textarea {
 
 .badge-blue, .badge-primary {
   background: var(--primary-subtle);
-  color: #8fa1ff;
+  color: var(--primary);
   border: 1px solid var(--primary-border);
 }
 
 .badge-green, .badge-success {
   background: var(--success-light);
-  color: #34d399;
+  color: var(--success);
   border: 1px solid var(--success-border);
 }
 
 .badge-yellow, .badge-warning, .badge-gold {
   background: var(--warning-light);
-  color: #fbbf24;
+  color: var(--warning);
   border: 1px solid var(--warning-border);
 }
 
 .badge-red, .badge-danger {
   background: var(--danger-light);
-  color: #f87171;
+  color: var(--danger);
   border: 1px solid var(--danger-border);
 }
 
 .badge-gray {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface-elevated);
   color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
 }
@@ -603,7 +670,7 @@ button, input, select, textarea {
   overflow-x: auto;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  background: #0f172a;
+  background: var(--bg-surface);
 }
 
 .table {
@@ -620,7 +687,7 @@ button, input, select, textarea {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background: rgba(17, 24, 39, 0.85);
+  background: var(--bg-surface-elevated);
   border-bottom: 1px solid var(--border-subtle);
   white-space: nowrap;
 }
@@ -640,7 +707,7 @@ button, input, select, textarea {
   transition: var(--transition-fast);
 }
 .table tbody tr:hover {
-  background: rgba(30, 41, 59, 0.5);
+  background: var(--bg-surface-hover);
 }
 
 /* ─── TailAdmin Form Controls ─────────────────────────────────────────── */
@@ -680,7 +747,7 @@ select {
   background-color: var(--bg-input);
 }
 select option {
-  background-color: #111827;
+  background-color: var(--bg-surface);
   color: var(--text-primary);
 }
 
@@ -704,7 +771,7 @@ select option {
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  background: #111827;
+  background: var(--bg-surface);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
@@ -714,6 +781,42 @@ select option {
 
 .modal-dialog.large {
   max-width: 760px;
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
 }
 
 /* ─── Taildrops Clean Toasts ──────────────────────────────────────────── */
@@ -735,26 +838,24 @@ select option {
   align-items: center;
   gap: 12px;
   padding: 12px 18px;
-  background: #1e293b;
+  background: var(--bg-surface);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-lg);
+  color: var(--text-primary);
   animation: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .toast.success {
   border-color: var(--success-border);
-  background: #0f231e;
 }
 
 .toast.error {
   border-color: var(--danger-border);
-  background: #271418;
 }
 
 .toast.info {
   border-color: var(--primary-border);
-  background: #131a30;
 }
 
 @keyframes toast-in {
@@ -762,45 +863,9 @@ select option {
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes modal-enter {
-  from {
-    opacity: 0;
-    transform: scale(0.96) translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--border-subtle);
-  background: rgba(17, 24, 39, 0.95);
-}
-
-.modal-body {
-  padding: 24px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 24px;
-  border-top: 1px solid var(--border-subtle);
-  background: rgba(17, 24, 39, 0.95);
-}
-
 /* ─── Telegram Simulator Box ──────────────────────────────────────────── */
 .tg-preview-box {
-  background: #0f172a;
+  background: var(--bg-surface-elevated);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 20px;
@@ -862,9 +927,9 @@ select option {
 .text-primary { color: var(--text-primary); }
 .text-secondary { color: var(--text-secondary); }
 .text-muted { color: var(--text-muted); }
-.text-green, .text-success { color: #34d399; }
-.text-blue, .text-brand { color: var(--primary-light); }
-.text-gold, .text-warning { color: #fbbf24; }
+.text-green, .text-success { color: var(--success); }
+.text-blue, .text-brand { color: var(--primary); }
+.text-gold, .text-warning { color: var(--warning); }
 
 /* ─── Responsive Media Queries ────────────────────────────────────────── */
 @media (max-width: 1200px) {

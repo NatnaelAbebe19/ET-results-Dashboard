@@ -108,7 +108,10 @@ function handleDirectMessage(chatId: string) {
   currentTab.value = 'broadcast'
 }
 
+const { initTheme } = useTheme()
+
 onMounted(() => {
+  initTheme()
   checkAuth()
 })
 </script>

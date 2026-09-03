@@ -228,7 +228,7 @@ function copyLink(url: string) {
 
         <div v-else style="display: flex; flex-direction: column; gap: 16px;">
           <!-- Metadata Card -->
-          <div style="background: #0f172a; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 16px;">
+          <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 16px;">
             <div style="font-size: 11px; font-weight: 700; color: var(--primary-light); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 10px;">
               Extracted Parameters
             </div>
@@ -236,7 +236,7 @@ function copyLink(url: string) {
             <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
               <div>
                 <span class="text-muted">Position:</span> 
-                <strong style="margin-left: 6px; color: #fff;">{{ parsedPreview.position || '—' }}</strong>
+                <strong style="margin-left: 6px; color: var(--text-primary);">{{ parsedPreview.position || '—' }}</strong>
               </div>
               <div>
                 <span class="text-muted">Type:</span> 
@@ -268,14 +268,14 @@ function copyLink(url: string) {
             <div 
               v-if="parsedPreview.candidates.length === 0" 
               class="text-muted" 
-              style="padding: 20px; background: #0f172a; border-radius: var(--radius-sm); text-align: center; font-size: 12.5px;"
+              style="padding: 20px; background: var(--bg-surface-elevated); border-radius: var(--radius-sm); text-align: center; font-size: 12.5px;"
             >
               No candidate names detected after "Candidate_List :".
             </div>
 
             <div 
               v-else 
-              style="max-height: 280px; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: #0f172a;"
+              style="max-height: 280px; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--bg-surface-elevated);"
             >
               <table class="table" style="font-size: 12.5px;">
                 <thead>

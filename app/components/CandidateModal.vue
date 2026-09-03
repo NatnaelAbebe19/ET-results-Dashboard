@@ -110,7 +110,7 @@ function copyLink() {
 
         <div v-else style="display: flex; flex-direction: column; gap: 18px;">
           <!-- Metadata Card -->
-          <div style="background: #0f172a; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 16px;">
+          <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 16px;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
               <div>
                 <span class="text-muted">Job Position:</span>
@@ -181,9 +181,9 @@ function copyLink() {
           </div>
 
           <!-- Candidates Table -->
-          <div style="border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); max-height: 380px; overflow-y: auto; background: #0f172a;">
+          <div style="border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); max-height: 380px; overflow-y: auto; background: var(--bg-surface-elevated);">
             <table class="table" style="font-size: 13px;">
-              <thead style="position: sticky; top: 0; background: #111827; z-index: 10;">
+              <thead style="position: sticky; top: 0; background: var(--bg-surface); z-index: 10;">
                 <tr>
                   <th style="width: 60px;">No</th>
                   <th>Full Candidate Name</th>

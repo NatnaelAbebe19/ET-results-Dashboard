@@ -294,7 +294,7 @@ defineExpose({ refresh: fetchSubscribers })
       <!-- Delivery report banner -->
       <div
         v-if="broadcastResult"
-        style="margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 12.5px; background: rgba(17, 24, 39, 0.8); border: 1px solid var(--border-subtle);"
+        style="margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 12.5px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle);"
       >
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
           <strong style="color: var(--text-primary);">Broadcast Status:</strong>
