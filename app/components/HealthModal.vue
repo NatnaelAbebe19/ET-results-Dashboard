@@ -26,52 +26,58 @@ onMounted(() => {
 
 <template>
   <div class="modal-backdrop" @click.self="emit('close')">
-    <div class="modal-dialog">
+    <div class="modal-card" style="max-width: 580px;">
       <div class="modal-header">
-        <h2 style="font-size: 16.5px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-          <span>🩺</span>
+        <h2 style="font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
           <span>System & Cloud Services Monitor</span>
         </h2>
-        <button class="btn btn-secondary btn-sm" @click="emit('close')" style="padding: 4px 8px;">✕</button>
+        <button class="btn btn-secondary btn-sm" @click="emit('close')" style="padding: 5px 9px;">✕</button>
       </div>
 
       <div class="modal-body">
-        <div v-if="isChecking && !healthData" style="text-align: center; padding: 30px 0;">
-          <div style="font-size: 28px; animation: pulse 1s infinite;">🩺</div>
-          <p class="text-muted" style="margin-top: 8px;">Pinging Neon DB, Telegram API, and Render...</p>
+        <div v-if="isChecking && !healthData" style="text-align: center; padding: 40px 0;">
+          <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid rgba(70,95,255,0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <p class="text-muted" style="margin-top: 10px; font-size: 13px;">Pinging Neon DB, Telegram API, and Render...</p>
         </div>
 
         <div v-else-if="healthData" style="display: flex; flex-direction: column; gap: 16px;">
-          <!-- Overall Status -->
+          <!-- Overall Status (Taildrops clean pill banner) -->
           <div 
             style="padding: 14px 18px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: space-between;"
             :style="{ 
-              background: healthData.overallStatus === 'operational' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(229, 168, 35, 0.1)',
-              border: healthData.overallStatus === 'operational' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(229, 168, 35, 0.3)'
+              background: healthData.overallStatus === 'operational' ? 'var(--success-light)' : 'var(--warning-light)',
+              border: healthData.overallStatus === 'operational' ? '1px solid var(--success-border)' : '1px solid var(--warning-border)'
             }"
           >
             <div>
-              <div style="font-weight: 700; font-size: 14.5px;" :class="healthData.overallStatus === 'operational' ? 'text-green' : 'text-gold'">
+              <div style="font-weight: 700; font-size: 14px;" :class="healthData.overallStatus === 'operational' ? 'text-green' : 'text-gold'">
                 {{ healthData.overallStatus === 'operational' ? '● All Cloud Services Connected & Healthy' : '⚠️ System Status Degraded' }}
               </div>
               <div class="text-muted" style="font-size: 11.5px; margin-top: 2px;">
-                Checked at: {{ new Date(healthData.timestamp).toLocaleTimeString() }}
+                Checked at {{ new Date(healthData.timestamp).toLocaleTimeString() }}
               </div>
             </div>
 
             <button class="btn btn-secondary btn-sm" :disabled="isChecking" @click="checkHealth">
-              <span>🔄</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ 'spin-animation': isChecking }">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
               <span>Re-check</span>
             </button>
           </div>
 
           <!-- Service 1: Neon DB -->
-          <div class="card" style="padding: 14px; background: rgba(0, 0, 0, 0.2);">
+          <div class="card" style="padding: 14px 18px; background: #0f172a;">
             <div class="flex-between">
-              <div class="flex-gap-2">
-                <span>🐘</span>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--primary-subtle); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700;">
+                  DB
+                </div>
                 <div>
-                  <div style="font-weight: 600; font-size: 13.5px;">{{ healthData.services.neonDatabase.name }}</div>
+                  <div style="font-weight: 600; font-size: 13.5px; color: var(--text-primary);">{{ healthData.services.neonDatabase.name }}</div>
                   <div class="text-muted" style="font-size: 11.5px;">AWS us-east-2 pooler endpoint</div>
                 </div>
               </div>
@@ -86,12 +92,14 @@ onMounted(() => {
           </div>
 
           <!-- Service 2: Telegram Bot -->
-          <div class="card" style="padding: 14px; background: rgba(0, 0, 0, 0.2);">
+          <div class="card" style="padding: 14px 18px; background: #0f172a;">
             <div class="flex-between">
-              <div class="flex-gap-2">
-                <span>✈️</span>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--primary-subtle); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700;">
+                  TG
+                </div>
                 <div>
-                  <div style="font-weight: 600; font-size: 13.5px;">{{ healthData.services.telegramBot.name }}</div>
+                  <div style="font-weight: 600; font-size: 13.5px; color: var(--text-primary);">{{ healthData.services.telegramBot.name }}</div>
                   <div class="text-muted" style="font-size: 11.5px;">
                     Bot: @{{ healthData.services.telegramBot.username || 'et_results_bot' }}
                   </div>
@@ -108,20 +116,24 @@ onMounted(() => {
           </div>
 
           <!-- Service 3: Render Web App -->
-          <div class="card" style="padding: 14px; background: rgba(0, 0, 0, 0.2);">
+          <div class="card" style="padding: 14px 18px; background: #0f172a;">
             <div class="flex-between">
-              <div class="flex-gap-2">
-                <span>🌐</span>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--primary-subtle); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700;">
+                  WEB
+                </div>
                 <div>
-                  <div style="font-weight: 600; font-size: 13.5px;">{{ healthData.services.renderWebService.name }}</div>
-                  <div class="text-muted" style="font-size: 11.5px;">{{ healthData.services.renderWebService.url }}</div>
+                  <div style="font-weight: 600; font-size: 13.5px; color: var(--text-primary);">{{ healthData.services.renderWebApp.name }}</div>
+                  <div class="text-muted" style="font-size: 11.5px;">
+                    https://et-results.onrender.com
+                  </div>
                 </div>
               </div>
 
               <div class="flex-gap-2">
-                <span class="font-mono text-muted" style="font-size: 11.5px;">{{ healthData.services.renderWebService.latencyMs }}ms</span>
-                <span :class="['badge', healthData.services.renderWebService.status === 'healthy' ? 'badge-green' : 'badge-red']">
-                  HTTP {{ healthData.services.renderWebService.statusCode || 'down' }}
+                <span class="font-mono text-muted" style="font-size: 11.5px;">{{ healthData.services.renderWebApp.latencyMs }}ms</span>
+                <span :class="['badge', healthData.services.renderWebApp.status === 'healthy' ? 'badge-green' : 'badge-red']">
+                  {{ healthData.services.renderWebApp.status }}
                 </span>
               </div>
             </div>
@@ -130,7 +142,9 @@ onMounted(() => {
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-primary btn-sm" @click="emit('close')">Done</button>
+        <button class="btn btn-primary btn-sm" @click="emit('close')">
+          Done
+        </button>
       </div>
     </div>
   </div>

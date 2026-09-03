@@ -12,16 +12,16 @@ const emit = defineEmits<{
   (e: 'logout'): void
 }>()
 
-const tabTitles: Record<string, { title: string; icon: string; desc: string }> = {
-  overview: { title: 'Executive Overview', icon: '📊', desc: 'Real-time telemetry and database analytics' },
-  results: { title: 'Announcements & Results', icon: '📋', desc: 'Tracked job positions and candidate lists' },
-  publisher: { title: 'Live Announcement Publisher', icon: '✍️', desc: 'Parse announcement text & publish to Neon DB' },
-  subscribers: { title: 'Telegram Subscribers', icon: '👥', desc: 'Active bot users receiving instant notifications' },
-  broadcast: { title: 'Telegram Broadcast Studio', icon: '📣', desc: 'Compose and dispatch alerts to bot subscribers' }
+const tabTitles: Record<string, { title: string; category: string }> = {
+  overview: { title: 'Overview & Telemetry', category: 'Dashboard' },
+  results: { title: 'Announcements & Results', category: 'Management' },
+  publisher: { title: 'Announcement Publisher', category: 'Tools' },
+  subscribers: { title: 'Telegram Subscribers', category: 'Audience' },
+  broadcast: { title: 'Broadcast Studio', category: 'Dispatch' }
 }
 
 const activeInfo = computed(() => {
-  return tabTitles[props.currentTab] || { title: 'Dashboard', icon: '✈️', desc: 'Ethiopian Airlines Results' }
+  return tabTitles[props.currentTab] || { title: 'Dashboard', category: 'Admin' }
 })
 </script>
 
@@ -29,7 +29,7 @@ const activeInfo = computed(() => {
   <header class="top-header">
     <div class="header-left">
       <button class="mobile-menu-btn" @click="emit('toggleSidebar')" aria-label="Toggle menu">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="3" y1="12" x2="21" y2="12"></line>
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -37,52 +37,88 @@ const activeInfo = computed(() => {
       </button>
 
       <div>
-        <h1 class="page-title">
-          <span>{{ activeInfo.icon }}</span>
-          <span>{{ activeInfo.title }}</span>
+        <div class="header-breadcrumb">
+          <span>{{ activeInfo.category }}</span>
+          <span style="opacity: 0.5;">/</span>
+          <span class="crumb-active">{{ activeInfo.title }}</span>
+        </div>
+        <h1 class="page-title" style="margin-top: 2px;">
+          {{ activeInfo.title }}
         </h1>
       </div>
     </div>
 
     <div class="header-right">
+      <!-- Sync / Refresh Button -->
       <button 
         class="btn btn-secondary btn-sm" 
         :disabled="isRefreshing" 
         @click="emit('refresh')"
-        title="Refresh Data"
+        title="Synchronize data from Neon DB"
       >
-        <span :style="{ display: 'inline-block', transform: isRefreshing ? 'rotate(360deg)' : 'none', transition: 'transform 0.5s' }">
-          🔄
-        </span>
-        <span class="hide-mobile">Refresh</span>
+        <svg 
+          width="14" 
+          height="14" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          stroke-width="2"
+          stroke-linecap="round" 
+          stroke-linejoin="round"
+          :class="{ 'spin-animation': isRefreshing }"
+        >
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+        <span class="hide-mobile">Sync</span>
       </button>
 
-      <!-- Live Service Health Status Pill -->
+      <!-- Live Service Health Status Pill (TailAdmin status style) -->
       <button 
         :class="['health-pill', healthStatus === 'degraded' ? 'degraded' : healthStatus === 'down' ? 'down' : '']"
         @click="emit('openHealth')"
-        title="Click to view live service status"
+        title="Click to inspect live services status"
       >
         <span class="pulse-dot"></span>
-        <span>{{ healthStatus === 'down' ? 'System Offline' : healthStatus === 'degraded' ? 'Degraded' : 'All Systems Operational' }}</span>
+        <span class="hide-mobile">{{ healthStatus === 'down' ? 'System Offline' : healthStatus === 'degraded' ? 'Degraded' : 'All Systems Operational' }}</span>
+        <span class="show-mobile-only">{{ healthStatus === 'down' ? 'Offline' : 'Online' }}</span>
       </button>
 
+      <!-- Lock / Sign Out Button -->
       <button 
         class="btn btn-secondary btn-sm" 
         @click="emit('logout')" 
-        title="Lock Dashboard"
-        style="padding: 7px 10px;"
+        title="Lock Dashboard / Sign Out"
+        style="padding: 7px 11px;"
       >
-        <span>🔒</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
       </button>
     </div>
   </header>
 </template>
 
 <style scoped>
+.spin-animation {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.show-mobile-only {
+  display: none;
+}
+
 @media (max-width: 640px) {
   .hide-mobile {
     display: none;
+  }
+  .show-mobile-only {
+    display: inline;
   }
 }
 </style>

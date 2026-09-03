@@ -48,20 +48,18 @@ async function resolveAllProfiles() {
   isResolvingAll.value = true
   const chatIds = subscribers.value.map((s: any) => s.chat_id)
 
-  // Mark all as loading
   for (const id of chatIds) {
     if (!profiles.value[id]) {
       profiles.value[id] = { loading: true, data: null, error: null }
     }
   }
 
-  // Resolve in parallel batches of 5 to avoid flooding the Telegram API
   const batchSize = 5
   for (let i = 0; i < chatIds.length; i += batchSize) {
     const batch = chatIds.slice(i, i + batchSize)
     await Promise.all(batch.map(id => resolveSingleProfile(id)))
     if (i + batchSize < chatIds.length) {
-      await new Promise(r => setTimeout(r, 300)) // small pause between batches
+      await new Promise(r => setTimeout(r, 250))
     }
   }
   isResolvingAll.value = false
@@ -78,7 +76,6 @@ async function resolveSingleProfile(chatId: string) {
   }
 }
 
-// Type-safe profile accessor for template use
 function getProfile(chatId: string) {
   return profiles.value[chatId] ?? { loading: false, data: null, error: null }
 }
@@ -95,7 +92,7 @@ async function addSubscriber() {
   isAdding.value = true
   try {
     await $fetch('/api/subscribers', { method: 'POST', body: { chat_id: id } })
-    emit('toast', `Chat ID ${id} added to subscribers!`, 'success')
+    emit('toast', `Chat ID ${id} registered to subscribers!`, 'success')
     newChatId.value = ''
     fetchSubscribers()
   } catch (err: any) {
@@ -121,7 +118,7 @@ async function sendBulkMessage() {
     emit('toast', 'Please enter a message to broadcast', 'error')
     return
   }
-  if (!confirm(`Send this message to ALL ${subscribers.value.length} subscribers?`)) return
+  if (!confirm(`Send this broadcast alert to ALL ${subscribers.value.length} subscribers on Telegram?`)) return
 
   isBroadcasting.value = true
   broadcastResult.value = null
@@ -137,7 +134,7 @@ async function sendBulkMessage() {
       }
     })
     broadcastResult.value = res
-    emit('toast', `Broadcast sent: ${res.sent} delivered, ${res.failed} failed`, res.failed === 0 ? 'success' : 'info')
+    emit('toast', `Broadcast dispatched: ${res.sent} sent, ${res.failed} failed`, res.failed === 0 ? 'success' : 'info')
   } catch (err: any) {
     emit('toast', `Broadcast failed: ${err.data?.statusMessage || err.message}`, 'error')
   } finally {
@@ -147,7 +144,7 @@ async function sendBulkMessage() {
 
 function copyChatId(chatId: string) {
   navigator.clipboard.writeText(chatId)
-  emit('toast', `Copied ${chatId}`, 'info')
+  emit('toast', `Copied ${chatId} to clipboard`, 'info')
 }
 
 function exportCsv() {
@@ -181,67 +178,95 @@ defineExpose({ refresh: fetchSubscribers })
 
 <template>
   <div>
-    <!-- Stats Row -->
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 22px;">
-      <!-- Count Card -->
-      <div class="card" style="display: flex; align-items: center; gap: 16px; padding: 18px 20px;">
-        <div class="stat-icon-wrapper" style="--accent-bg: rgba(16, 185, 129, 0.15); --accent-color: #10b981; --accent-border: rgba(16, 185, 129, 0.3); width: 48px; height: 48px; font-size: 22px;">
-          👥
+    <!-- Top 3 Stats & Registration Grid (TailAdmin Metric Cards) -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 20px; margin-bottom: 24px;">
+      <!-- Total Subscribers -->
+      <div class="card stat-card">
+        <div class="stat-top">
+          <span class="stat-label">Active Audience</span>
+          <div class="stat-icon-wrapper">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
         </div>
-        <div>
-          <div class="stat-value" style="font-size: 28px;">{{ subscribers.length }}</div>
-          <div class="text-muted" style="font-size: 12px;">Active Subscribers</div>
+        <div class="stat-value">{{ subscribers.length }}</div>
+        <div class="stat-sub">
+          <span class="badge badge-green" style="padding: 2px 7px; font-size: 11px;">
+            ● Receiving Alerts
+          </span>
         </div>
       </div>
 
-      <!-- Resolved count -->
-      <div class="card" style="display: flex; align-items: center; gap: 16px; padding: 18px 20px;">
-        <div class="stat-icon-wrapper" style="--accent-bg: rgba(56, 189, 248, 0.15); --accent-color: #38bdf8; --accent-border: rgba(56, 189, 248, 0.3); width: 48px; height: 48px; font-size: 22px;">
-          🔍
+      <!-- Identities Resolved -->
+      <div class="card stat-card">
+        <div class="stat-top">
+          <span class="stat-label">Telegram Profiles</span>
+          <div class="stat-icon-wrapper">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
         </div>
-        <div>
-          <div class="stat-value" style="font-size: 28px;">
-            {{ Object.values(profiles).filter(p => p.data).length }}
-            <span style="font-size: 13px; color: var(--text-muted);">/ {{ subscribers.length }}</span>
-          </div>
-          <div class="text-muted" style="font-size: 12px;">
-            {{ isResolvingAll ? 'Resolving identities...' : 'Identities Resolved' }}
-          </div>
+        <div class="stat-value">
+          {{ Object.values(profiles).filter(p => p.data).length }}
+          <span style="font-size: 14px; font-weight: 500; color: var(--text-muted);">/ {{ subscribers.length }}</span>
+        </div>
+        <div class="stat-sub">
+          <span :class="isResolvingAll ? 'text-brand' : 'text-muted'">
+            {{ isResolvingAll ? 'Resolving via Bot API...' : 'Names & Usernames Synced' }}
+          </span>
         </div>
       </div>
 
-      <!-- Add Subscriber -->
-      <div class="card" style="padding: 14px 18px;">
-        <div style="font-weight: 700; font-size: 12.5px; margin-bottom: 8px; color: var(--text-secondary);">➕ Add New Subscriber</div>
+      <!-- Register New Subscriber -->
+      <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-weight: 600; font-size: 13.5px; color: var(--text-primary); margin-bottom: 4px;">
+            Register Subscriber
+          </div>
+          <div class="text-muted" style="font-size: 12px; margin-bottom: 12px;">
+            Manually add a Telegram user or channel Chat ID
+          </div>
+        </div>
+
         <div style="display: flex; gap: 8px;">
           <input
             v-model="newChatId"
             type="text"
             placeholder="Chat ID (e.g. 123456789)"
-            style="flex: 1; font-size: 12px;"
+            style="flex: 1;"
             @keyup.enter="addSubscriber"
           />
-          <button class="btn btn-primary btn-sm" :disabled="!newChatId || isAdding" @click="addSubscriber">
-            {{ isAdding ? '...' : 'Add' }}
+          <button class="btn btn-primary" :disabled="!newChatId || isAdding" @click="addSubscriber">
+            <span>{{ isAdding ? 'Adding...' : 'Register' }}</span>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Bulk Message Panel -->
-    <div class="card" style="margin-bottom: 22px; border-color: rgba(234, 179, 8, 0.3); background: rgba(234, 179, 8, 0.04);">
-      <div class="card-header" style="padding-bottom: 12px;">
+    <!-- Quick Bulk Broadcast Panel (Taildrops Clean Alert/Composer) -->
+    <div class="card" style="margin-bottom: 24px; border-color: var(--primary-border); background: rgba(70, 95, 255, 0.03);">
+      <div class="card-header" style="margin-bottom: 14px;">
         <div>
-          <h2 class="card-title" style="font-size: 14px;">
-            <span>📢</span>
-            <span>Quick Bulk Broadcast</span>
+          <h2 class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
+              <path d="m3 11 18-5-5 18-4-7-9-6z"></path>
+              <path d="M13 13 21 6"></path>
+            </svg>
+            <span>Quick Audience Broadcast</span>
           </h2>
-          <div class="text-muted" style="font-size: 11.5px; margin-top: 2px;">
-            Send a plain text or Telegram Markdown message to all {{ subscribers.length }} subscribers instantly
+          <div class="text-muted" style="font-size: 12px; margin-top: 2px;">
+            Send an instant notification alert directly to all {{ subscribers.length }} bot subscribers
           </div>
         </div>
+
         <button class="btn btn-secondary btn-sm" @click="emit('navigate', 'broadcast')">
-          <span>Open Studio ↗</span>
+          <span>Full Studio ↗</span>
         </button>
       </div>
 
@@ -249,126 +274,184 @@ defineExpose({ refresh: fetchSubscribers })
         <textarea
           v-model="bulkMessage"
           rows="3"
-          placeholder="Type your message here... Supports *bold*, _italic_, [link](url) Telegram Markdown"
-          style="width: 100%; resize: vertical; font-size: 13px;"
+          placeholder="Compose notification message... Supports *bold*, _italic_, and [link](url) Telegram Markdown"
+          style="width: 100%; resize: vertical;"
         />
         <button
           class="btn btn-primary"
           :disabled="isBroadcasting || !bulkMessage.trim() || subscribers.length === 0"
           @click="sendBulkMessage"
-          style="white-space: nowrap; align-self: stretch;"
+          style="padding: 12px 20px; align-self: stretch; display: flex; align-items: center; justify-content: center;"
         >
-          <span>{{ isBroadcasting ? '⏳' : '📢' }}</span>
-          <span>{{ isBroadcasting ? `Sending...` : `Send to All (${subscribers.length})` }}</span>
+          <svg v-if="!isBroadcasting" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+          <span>{{ isBroadcasting ? 'Dispatching...' : `Broadcast to All (${subscribers.length})` }}</span>
         </button>
       </div>
 
-      <!-- Delivery result -->
+      <!-- Delivery report banner -->
       <div
         v-if="broadcastResult"
-        style="margin-top: 10px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 12.5px;"
-        :style="{ background: broadcastResult.failed > 0 ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)', border: broadcastResult.failed > 0 ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(16,185,129,0.3)' }"
+        style="margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 12.5px; background: rgba(17, 24, 39, 0.8); border: 1px solid var(--border-subtle);"
       >
-        <strong>Delivery Report:</strong>
-        ✅ {{ broadcastResult.sent }} delivered &nbsp;|&nbsp;
-        ❌ {{ broadcastResult.failed }} failed &nbsp;|&nbsp;
-        📨 {{ broadcastResult.total }} total
-        <span v-if="broadcastResult.errors?.length" style="display: block; margin-top: 4px; color: var(--danger); font-size: 11px;">
-          {{ broadcastResult.errors.map((e: any) => `${e.chatId}: ${e.error}`).join(' · ') }}
-        </span>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <strong style="color: var(--text-primary);">Broadcast Status:</strong>
+          <span class="badge badge-green">Delivered: {{ broadcastResult.sent }}</span>
+          <span v-if="broadcastResult.failed > 0" class="badge badge-red">Failed: {{ broadcastResult.failed }}</span>
+          <span class="text-muted font-mono">Total: {{ broadcastResult.total }}</span>
+        </div>
       </div>
     </div>
 
-    <!-- Subscriber Table Card -->
-    <div class="card">
-      <div class="card-header">
-        <div class="flex-gap-3" style="flex: 1; max-width: 360px;">
-          <input v-model="searchQuery" type="text" placeholder="Search by Chat ID..." style="width: 100%;" />
+    <!-- TailAdmin Subscribers Data Table -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div style="padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 14px;">
+        <div class="flex-gap-3" style="flex: 1; max-width: 380px;">
+          <div style="position: relative; width: 100%;">
+            <input 
+              v-model="searchQuery" 
+              type="text" 
+              placeholder="Search by Chat ID..." 
+              style="width: 100%; padding-left: 36px;" 
+            />
+            <svg 
+              width="15" 
+              height="15" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              stroke-width="2"
+              style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
         </div>
+
         <div class="flex-gap-2">
-          <button class="btn btn-secondary btn-sm" @click="exportCsv">📥 Export CSV</button>
-          <button class="btn btn-secondary btn-sm" :disabled="isLoading" @click="fetchSubscribers">🔄 Refresh</button>
+          <button class="btn btn-secondary btn-sm" @click="exportCsv">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Export CSV</span>
+          </button>
+          <button class="btn btn-secondary btn-sm" :disabled="isLoading" @click="fetchSubscribers">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ 'spin-animation': isLoading }">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+            <span>Refresh</span>
+          </button>
         </div>
       </div>
 
-      <!-- Loading -->
-      <div v-if="isLoading" style="text-align: center; padding: 40px 0;">
-        <div style="font-size: 24px; animation: pulse 1s infinite;">👥</div>
-        <p class="text-muted" style="margin-top: 8px;">Loading subscriber list...</p>
+      <!-- Loading State -->
+      <div v-if="isLoading" style="text-align: center; padding: 50px 0;">
+        <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid rgba(70,95,255,0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+        <p class="text-muted" style="margin-top: 12px; font-size: 13px;">Loading subscriber roster...</p>
       </div>
 
-      <!-- Empty -->
-      <div v-else-if="!subscribers.length" style="text-align: center; padding: 40px 0;">
-        <div style="font-size: 32px;">📭</div>
-        <h3 style="margin-top: 10px; font-size: 16px;">No subscribers found</h3>
+      <!-- Empty State -->
+      <div v-else-if="!subscribers.length" style="text-align: center; padding: 60px 0;">
+        <div style="font-size: 32px; margin-bottom: 12px;">👥</div>
+        <h3 style="font-size: 15px; color: var(--text-primary);">No subscribers found</h3>
         <p class="text-muted" style="font-size: 13px; margin-top: 4px;">Users who send /start to @et_results_bot will appear here automatically.</p>
       </div>
 
-      <!-- Table -->
-      <div v-else class="table-wrapper">
+      <!-- Subscribers Table -->
+      <div v-else class="table-wrapper" style="border: none; border-radius: 0;">
         <table class="table">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Identity</th>
+              <th style="width: 44px;">#</th>
+              <th>User Identity</th>
               <th>Chat ID</th>
               <th>Type</th>
-              <th>Subscribed</th>
+              <th>Subscribed Date</th>
               <th style="text-align: right;">Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(sub, idx) in subscribers" :key="sub.chat_id">
-              <!-- # -->
-              <td class="text-muted" style="font-size: 12px; width: 36px;">{{ idx + 1 }}</td>
+              <!-- Number -->
+              <td class="text-muted font-mono" style="font-size: 12px;">{{ idx + 1 }}</td>
 
-              <!-- Identity -->
-              <td style="min-width: 180px; max-width: 240px;">
-                <!-- Loading -->
-                <div v-if="getProfile(sub.chat_id).loading" style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted);">
-                  <span style="animation: pulse 1s infinite;">⏳</span>
-                  <span>Resolving...</span>
+              <!-- Identity with avatar initial and username -->
+              <td style="min-width: 220px; max-width: 300px;">
+                <!-- Loading indicator -->
+                <div v-if="getProfile(sub.chat_id).loading" style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted);">
+                  <div style="width: 14px; height: 14px; border: 2px solid rgba(70,95,255,0.3); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                  <span>Resolving Telegram info...</span>
                 </div>
-                <!-- Error: show chat id type indicator -->
-                <div v-else-if="getProfile(sub.chat_id).error" style="font-size: 12px;">
-                  <div style="font-weight: 600; color: var(--text-secondary);">
-                    {{ sub.chat_id.startsWith('-') ? '👥 Group/Channel' : '👤 Private User' }}
+
+                <!-- Error fallback -->
+                <div v-else-if="getProfile(sub.chat_id).error" style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 34px; height: 34px; border-radius: var(--radius-full); background: rgba(255,255,255,0.05); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">
+                    {{ sub.chat_id.startsWith('-') ? '👥' : '👤' }}
                   </div>
-                  <div style="font-size: 10.5px; color: var(--text-muted);">
-                    Not accessible via bot API
+                  <div>
+                    <div style="font-weight: 600; font-size: 13px; color: var(--text-secondary);">
+                      {{ sub.chat_id.startsWith('-') ? 'Telegram Group' : 'Telegram User' }}
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted);">
+                      Not accessible via bot API
+                    </div>
                   </div>
                 </div>
-                <!-- Resolved: group -->
-                <div v-else-if="getProfile(sub.chat_id).data && isGroup(getProfile(sub.chat_id).data.type)">
-                  <div style="font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">
+
+                <!-- Resolved Group -->
+                <div v-else-if="getProfile(sub.chat_id).data && isGroup(getProfile(sub.chat_id).data.type)" style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 34px; height: 34px; border-radius: var(--radius-full); background: var(--primary-subtle); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">
                     {{ getProfile(sub.chat_id).data.type === 'channel' ? '📢' : '👥' }}
-                    {{ getProfile(sub.chat_id).data.title }}
                   </div>
-                  <div style="font-size: 11px; color: #38bdf8;" v-if="getProfile(sub.chat_id).data.username">
-                    {{ getProfile(sub.chat_id).data.username }}
-                  </div>
-                  <div style="font-size: 10.5px; color: var(--text-muted);" v-if="getProfile(sub.chat_id).data.memberCount">
-                    {{ getProfile(sub.chat_id).data.memberCount.toLocaleString() }} members
-                  </div>
-                </div>
-                <!-- Resolved: private user -->
-                <div v-else-if="getProfile(sub.chat_id).data">
-                  <div style="font-weight: 600; font-size: 13px;">
-                    👤 {{ getProfile(sub.chat_id).data.displayName }}
-                  </div>
-                  <div style="font-size: 11px; color: #38bdf8;" v-if="getProfile(sub.chat_id).data.username">
-                    {{ getProfile(sub.chat_id).data.username }}
+                  <div>
+                    <div style="font-weight: 600; font-size: 13px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
+                      {{ getProfile(sub.chat_id).data.title }}
+                    </div>
+                    <div v-if="getProfile(sub.chat_id).data.username" style="font-size: 11px; color: var(--primary-light);">
+                      {{ getProfile(sub.chat_id).data.username }}
+                    </div>
+                    <div v-if="getProfile(sub.chat_id).data.memberCount" style="font-size: 10.5px; color: var(--text-muted);">
+                      {{ getProfile(sub.chat_id).data.memberCount.toLocaleString() }} members
+                    </div>
                   </div>
                 </div>
-                <!-- Not yet loaded -->
+
+                <!-- Resolved Private User -->
+                <div v-else-if="getProfile(sub.chat_id).data" style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 34px; height: 34px; border-radius: var(--radius-full); background: var(--primary-subtle); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">
+                    {{ (getProfile(sub.chat_id).data.displayName || 'U')[0].toUpperCase() }}
+                  </div>
+                  <div>
+                    <div style="font-weight: 600; font-size: 13px; color: var(--text-primary);">
+                      {{ getProfile(sub.chat_id).data.displayName }}
+                    </div>
+                    <div v-if="getProfile(sub.chat_id).data.username" style="font-size: 11px; color: var(--primary-light);">
+                      {{ getProfile(sub.chat_id).data.username }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Default fallback -->
                 <div v-else class="text-muted" style="font-size: 12px;">—</div>
               </td>
 
               <!-- Chat ID -->
               <td>
                 <div style="display: flex; align-items: center; gap: 6px;">
-                  <span class="font-mono" style="font-size: 12px; font-weight: 600;">{{ sub.chat_id }}</span>
-                  <button @click="copyChatId(sub.chat_id)" style="opacity: 0.5; cursor: pointer; font-size: 11px;" title="Copy">📋</button>
+                  <span class="font-mono" style="font-size: 12.5px; font-weight: 600; color: var(--text-secondary);">
+                    {{ sub.chat_id }}
+                  </span>
+                  <button @click="copyChatId(sub.chat_id)" style="opacity: 0.5; cursor: pointer; color: var(--text-muted);" title="Copy Chat ID">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                  </button>
                 </div>
               </td>
 
@@ -381,24 +464,31 @@ defineExpose({ refresh: fetchSubscribers })
                 }">
                   {{ getProfile(sub.chat_id).data.type }}
                 </span>
-                <span v-else class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">
-                  {{ sub.chat_id.startsWith('-100') ? 'channel?' : sub.chat_id.startsWith('-') ? 'group?' : 'private?' }}
+                <span v-else class="badge badge-gray">
+                  {{ sub.chat_id.startsWith('-100') ? 'channel' : sub.chat_id.startsWith('-') ? 'group' : 'private' }}
                 </span>
               </td>
 
-              <!-- Date -->
-              <td style="color: var(--text-muted); font-size: 11.5px; white-space: nowrap;">
+              <!-- Subscribed Date -->
+              <td style="color: var(--text-muted); font-size: 12px; white-space: nowrap;">
                 {{ formatDate(sub.subscribed_at) }}
               </td>
 
               <!-- Actions -->
               <td style="text-align: right;">
                 <div class="flex-gap-2" style="justify-content: flex-end;">
-                  <button class="btn btn-secondary btn-sm" @click="emit('directMessage', sub.chat_id)" title="Open broadcast studio for this user">
-                    ✉️ Message
+                  <button class="btn btn-secondary btn-sm" @click="emit('directMessage', sub.chat_id)" title="Compose alert to this chat">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                      <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    <span>Message</span>
                   </button>
-                  <button class="btn btn-danger btn-sm" @click="removeSubscriber(sub.chat_id)" title="Remove subscriber">
-                    🗑️
+                  <button class="btn btn-danger btn-sm" @click="removeSubscriber(sub.chat_id)" title="Unsubscribe">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
                   </button>
                 </div>
               </td>
@@ -411,13 +501,8 @@ defineExpose({ refresh: fetchSubscribers })
 </template>
 
 <style scoped>
-.badge-yellow {
-  background: rgba(234, 179, 8, 0.15);
-  color: #eab308;
-  border: 1px solid rgba(234, 179, 8, 0.3);
-}
-@media (max-width: 900px) {
-  div[style*="grid-template-columns: repeat(3, 1fr)"] {
+@media (max-width: 960px) {
+  div[style*="grid-template-columns: 1fr 1fr 1.2fr"] {
     grid-template-columns: 1fr !important;
   }
 }

@@ -68,26 +68,31 @@ function copyLink() {
   if (!data.value?.id) return
   const url = `${props.renderBaseUrl}/results/${data.value.id}`
   navigator.clipboard.writeText(url)
-  emit('toast', 'Copied Render Web App URL', 'info')
+  emit('toast', 'Copied web viewer link', 'info')
 }
 </script>
 
 <template>
   <div v-if="resultId" class="modal-backdrop" @click.self="emit('close')">
-    <div class="modal-dialog large">
+    <div class="modal-card" style="max-width: 720px;">
       <!-- Modal Header -->
       <div class="modal-header">
         <div>
-          <h2 style="font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-            <span>🎓</span>
+          <h2 style="font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
             <span>Candidate Roster & Announcement Details</span>
           </h2>
-          <div class="text-muted" style="font-size: 12px; margin-top: 2px;">
-            Fingerprint ID: <span class="font-mono text-gold">{{ resultId }}</span>
+          <div class="text-muted" style="font-size: 11.5px; margin-top: 2px;">
+            Record Hash: <span class="font-mono" style="color: var(--primary-light);">{{ resultId }}</span>
           </div>
         </div>
 
-        <button class="btn btn-secondary btn-sm" @click="emit('close')" style="padding: 4px 8px;">
+        <button class="btn btn-secondary btn-sm" @click="emit('close')" style="padding: 5px 9px;">
           ✕
         </button>
       </div>
@@ -95,8 +100,8 @@ function copyLink() {
       <!-- Modal Body -->
       <div class="modal-body">
         <div v-if="isLoading" style="text-align: center; padding: 40px 0;">
-          <div style="font-size: 28px; animation: pulse 1s infinite;">📄</div>
-          <p class="text-muted" style="margin-top: 8px;">Loading roster from Neon PostgreSQL...</p>
+          <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid rgba(70,95,255,0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <p class="text-muted" style="margin-top: 10px; font-size: 13px;">Retrieving roster from database...</p>
         </div>
 
         <div v-else-if="!data" class="text-muted" style="text-align: center; padding: 40px 0;">
@@ -105,7 +110,7 @@ function copyLink() {
 
         <div v-else style="display: flex; flex-direction: column; gap: 18px;">
           <!-- Metadata Card -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 16px;">
+          <div style="background: #0f172a; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 16px;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
               <div>
                 <span class="text-muted">Job Position:</span>
@@ -117,35 +122,47 @@ function copyLink() {
               <div>
                 <span class="text-muted">Type:</span>
                 <div style="margin-top: 2px;">
-                  <span class="badge badge-gold">{{ data.announcement || 'General' }}</span>
+                  <span class="badge badge-blue">{{ data.announcement || 'General' }}</span>
                 </div>
               </div>
 
               <div>
                 <span class="text-muted">Venue / Location:</span>
-                <div style="font-weight: 500; margin-top: 2px;">{{ data.location || '—' }}</div>
+                <div style="font-weight: 500; margin-top: 2px; color: var(--text-secondary);">{{ data.location || '—' }}</div>
               </div>
 
               <div>
-                <span class="text-muted">Date & Time:</span>
-                <div style="font-weight: 500; margin-top: 2px;">{{ data.date_time || '—' }}</div>
+                <span class="text-muted">Exam Schedule:</span>
+                <div style="font-weight: 500; margin-top: 2px; color: var(--text-secondary);">{{ data.date_time || '—' }}</div>
               </div>
             </div>
 
-            <div v-if="data.description" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-subtle); font-size: 12.5px; color: var(--text-secondary); white-space: pre-wrap;">
+            <div v-if="data.description" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-subtle); font-size: 12.5px; color: var(--text-secondary); white-space: pre-wrap; line-height: 1.5;">
               {{ data.description }}
             </div>
           </div>
 
           <!-- Search & Count Bar -->
           <div class="flex-between" style="flex-wrap: wrap; gap: 12px;">
-            <div style="display: flex; align-items: center; gap: 10px; flex: 1; max-width: 320px;">
+            <div style="position: relative; flex: 1; max-width: 320px;">
               <input 
                 v-model="searchQuery" 
                 type="text" 
-                placeholder="Search candidate name or #" 
-                style="width: 100%; font-size: 12.5px;"
+                placeholder="Search candidates by name or #..." 
+                style="width: 100%; font-size: 12.5px; padding-left: 32px;"
               />
+              <svg 
+                width="14" 
+                height="14" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                stroke-width="2" 
+                style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"
+              >
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
             </div>
 
             <div class="flex-gap-2">
@@ -153,30 +170,34 @@ function copyLink() {
                 {{ filteredCandidates.length }} of {{ data.candidates?.length || 0 }} Candidates
               </span>
               <button class="btn btn-secondary btn-sm" @click="exportCsv">
-                <span>📥</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
                 <span>Export CSV</span>
               </button>
             </div>
           </div>
 
           <!-- Candidates Table -->
-          <div style="border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); max-height: 380px; overflow-y: auto;">
+          <div style="border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); max-height: 380px; overflow-y: auto; background: #0f172a;">
             <table class="table" style="font-size: 13px;">
-              <thead style="position: sticky; top: 0; background: #0c121e; z-index: 10;">
+              <thead style="position: sticky; top: 0; background: #111827; z-index: 10;">
                 <tr>
                   <th style="width: 60px;">No</th>
-                  <th>Full Name</th>
+                  <th>Full Candidate Name</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="filteredCandidates.length === 0">
-                  <td colspan="2" class="text-muted" style="text-align: center; padding: 24px;">
+                  <td colspan="2" class="text-muted" style="text-align: center; padding: 28px;">
                     No candidates found matching "{{ searchQuery }}"
                   </td>
                 </tr>
                 <tr v-for="cand in filteredCandidates" :key="cand.no">
                   <td class="font-mono text-muted">{{ cand.no }}</td>
-                  <td style="font-weight: 600; color: #fff;">{{ cand.name }}</td>
+                  <td style="font-weight: 500; color: #ffffff;">{{ cand.name }}</td>
                 </tr>
               </tbody>
             </table>
@@ -193,17 +214,16 @@ function copyLink() {
           rel="noopener noreferrer" 
           class="btn btn-secondary btn-sm"
         >
-          <span>🌐</span>
-          <span>Open in Render Viewer</span>
+          <span>Open in Web Viewer</span>
+          <span>↗</span>
         </a>
 
         <button class="btn btn-secondary btn-sm" @click="copyLink">
-          <span>📋</span>
           <span>Copy Public Link</span>
         </button>
 
         <button class="btn btn-primary btn-sm" @click="emit('close')">
-          Close
+          Done
         </button>
       </div>
     </div>
