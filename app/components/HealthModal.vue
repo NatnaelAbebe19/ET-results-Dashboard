@@ -101,7 +101,7 @@ onMounted(() => {
                 <div>
                   <div style="font-weight: 600; font-size: 13.5px; color: var(--text-primary);">{{ healthData.services.telegramBot.name }}</div>
                   <div class="text-muted" style="font-size: 11.5px;">
-                    Bot: @{{ healthData.services.telegramBot.username || 'et_results_bot' }}
+                    Bot: @{{ healthData.services.telegramBot.username || 'et_result_announcement_bot' }}
                   </div>
                 </div>
               </div>

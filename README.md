@@ -1,8 +1,8 @@
 # Ethiopian Airlines Results — Admin Dashboard
 
-A full-stack administrative suite built with **Vue 3** and **Nuxt 3**, designed for monitoring and controlling the Ethiopian Airlines results scraper, candidate roster viewer ([et-results.onrender.com](https://et-results.onrender.com)), and Telegram notification bot ([@et_results_bot](https://t.me/et_results_bot)).
+A full-stack administrative suite built with **Vue 3** and **Nuxt 3**, designed for monitoring and controlling the Ethiopian Airlines results scraper, candidate roster viewer ([et-results.onrender.com](https://et-results.onrender.com)), and Telegram notification bot ([@et_result_announcement_bot](https://t.me/et_result_announcement_bot)).
 
-Configured for **1-click zero-config deployment on Vercel** with serverless database connectivity to Neon PostgreSQL.
+Configured for **1-click zero-config deployment on Vercel** with serverless database connectivity to PostgreSQL (Supabase / Neon).
 
 ---
 
@@ -31,7 +31,7 @@ Configured for **1-click zero-config deployment on Vercel** with serverless data
   - Search, CSV export, and deletion.
 
 - **Telegram Broadcast Studio**:
-  - Dispatch announcements or notices directly through `@et_results_bot`.
+  - Dispatch announcements or notices directly through `@et_result_announcement_bot`.
   - Support for Telegram Markdown formatting.
   - Live **Telegram Mobile Client Chat Bubble Simulator** showing an exact replica of what subscribers will see.
   - Configurable inline action buttons with native **Telegram Web App** embedding.
@@ -50,18 +50,18 @@ Configured for **1-click zero-config deployment on Vercel** with serverless data
 Create a `.env` file in the root directory (refer to `.env.example`):
 
 ```env
-# Neon PostgreSQL Connection String
-DATABASE_URL=postgresql://neondb_owner:npg_RTCvEnlMQ65f@ep-rough-darkness-a5whzvg4-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+# PostgreSQL Connection String (Supabase or Neon)
+DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[YOUR-PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?sslmode=require
 
-# Telegram Bot Token (et_results_bot)
-TELEGRAM_BOT_TOKEN=8232583935:AAF0QRQqEVxTArDLLOuXQVTXOXkyyNSF-uk
+# Telegram Bot Token (from @BotFather)
+TELEGRAM_BOT_TOKEN=your_bot_token_here
 
 # Render Web Service Base URL
 RENDER_APP_URL=https://et-results.onrender.com
 
 # Admin Authentication
-ADMIN_PASSWORD=admin12345
-ADMIN_SESSION_SECRET=et_results_super_secret_dashboard_key_2026
+ADMIN_PASSWORD=your_secure_admin_password
+ADMIN_SESSION_SECRET=your_random_secure_secret_string
 ```
 
 ---

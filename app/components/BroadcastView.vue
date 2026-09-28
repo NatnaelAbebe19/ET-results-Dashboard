@@ -8,6 +8,9 @@ const emit = defineEmits<{
   (e: 'toast', msg: string, type: 'success' | 'error' | 'info'): void
 }>()
 
+const config = useRuntimeConfig()
+const botUsername = computed(() => config.public.botUsername || 'et_result_announcement_bot')
+
 const target = ref<'all' | 'test'>('test')
 const testChatId = ref(props.initialChatId || '')
 const messageText = ref(`✈️ *ETHIOPIAN AIRLINES RESULTS ANNOUNCEMENT* ✈️\n\n` +
@@ -114,7 +117,7 @@ async function sendBroadcast() {
               <span>Broadcast Composer</span>
             </h2>
             <div class="text-muted" style="font-size: 12px; margin-top: 2px;">
-              Dispatch formatted alerts directly through @et_results_bot
+              Dispatch formatted alerts directly through @{{ botUsername }}
             </div>
           </div>
 

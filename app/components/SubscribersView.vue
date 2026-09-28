@@ -7,6 +7,9 @@ const emit = defineEmits<{
 
 const handleUnauthorized = inject<() => void>('handleUnauthorized', () => {})
 
+const config = useRuntimeConfig()
+const botUsername = computed(() => config.public.botUsername || 'et_result_announcement_bot')
+
 const subscribers = ref<any[]>([])
 const isLoading = ref(false)
 const searchQuery = ref('')
@@ -359,7 +362,7 @@ defineExpose({ refresh: fetchSubscribers })
       <div v-else-if="!subscribers.length" style="text-align: center; padding: 60px 0;">
         <div style="font-size: 32px; margin-bottom: 12px;">👥</div>
         <h3 style="font-size: 15px; color: var(--text-primary);">No subscribers found</h3>
-        <p class="text-muted" style="font-size: 13px; margin-top: 4px;">Users who send /start to @et_results_bot will appear here automatically.</p>
+        <p class="text-muted" style="font-size: 13px; margin-top: 4px;">Users who send /start to @{{ botUsername }} will appear here automatically.</p>
       </div>
 
       <!-- Subscribers Table -->

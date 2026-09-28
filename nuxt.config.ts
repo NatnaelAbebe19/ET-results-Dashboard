@@ -19,7 +19,7 @@ export default defineNuxtConfig({
     // Public keys (accessible on client)
     public: {
       renderAppUrl: process.env.RENDER_APP_URL || 'https://et-results.onrender.com',
-      botUsername: 'et_results_bot'
+      botUsername: process.env.BOT_USERNAME || 'et_result_announcement_bot'
     }
   },
 

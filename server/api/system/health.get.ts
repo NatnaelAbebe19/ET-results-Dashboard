@@ -64,13 +64,15 @@ export default defineEventHandler(async (event) => {
     overallStatus: allOperational ? 'operational' : 'degraded',
     services: {
       neonDatabase: {
-        name: 'Neon Serverless PostgreSQL',
+        name: 'PostgreSQL Database (Supabase)',
         status: dbHealth.ok ? 'healthy' : 'down',
         latencyMs: dbHealth.latencyMs,
         error: dbHealth.error
       },
       telegramBot: {
-        name: 'Telegram Bot API (@et_results_bot)',
+        name: telegramHealth.bot?.username
+          ? `Telegram Bot API (@${telegramHealth.bot.username})`
+          : 'Telegram Bot API (@et_result_announcement_bot)',
         status: telegramHealth.ok ? 'healthy' : 'down',
         latencyMs: telegramHealth.latencyMs,
         botName: telegramHealth.bot?.first_name,

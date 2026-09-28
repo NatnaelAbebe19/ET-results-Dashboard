@@ -19,6 +19,9 @@ function selectTab(id: string) {
   emit('update:currentTab', id)
   emit('close')
 }
+
+const config = useRuntimeConfig()
+const botUsername = computed(() => config.public.botUsername || 'et_result_announcement_bot')
 </script>
 
 <template>
@@ -147,7 +150,7 @@ function selectTab(id: string) {
 
       <!-- Telegram Bot Link -->
       <a 
-        href="https://t.me/et_results_bot" 
+        :href="`https://t.me/${botUsername}`" 
         target="_blank" 
         rel="noopener noreferrer" 
         class="nav-item"
@@ -158,7 +161,7 @@ function selectTab(id: string) {
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
           </svg>
         </span>
-        <span>@et_results_bot</span>
+        <span>@{{ botUsername }}</span>
         <span style="margin-left: auto; font-size: 11px; opacity: 0.5;">↗</span>
       </a>
 
