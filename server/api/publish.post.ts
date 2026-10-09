@@ -174,11 +174,35 @@ async function sendBroadcastForAnnouncement(announcement: ParsedAnnouncement) {
     return { skipped: true, reason: 'TELEGRAM_BOT_TOKEN not configured' }
   }
 
-  // Fetch subscribers
-  const subsRes = await query<{ chat_id: string }>('SELECT chat_id FROM subscribers;')
-  const subscribers = subsRes.rows.map(r => r.chat_id)
-  if (subscribers.length === 0) {
+  // Fetch subscribers with role preferences
+  const subsRes = await query<{ chat_id: string; role_filter?: string | null }>(
+    "SELECT chat_id, COALESCE(role_filter, 'all') as role_filter FROM subscribers;"
+  )
+  if (subsRes.rows.length === 0) {
     return { sent: 0, total: 0, reason: 'No subscribers found' }
+  }
+
+  const checkText = `${announcement.position} ${announcement.announcement || ''} ${announcement.description || ''}`.toLowerCase()
+  const isPilot = ['pilot', 'first officer', 'captain', 'cadet', 'cockpit'].some(k => checkText.includes(k))
+  const isCabin = ['cabin crew', 'flight attendant', 'air hostess', 'steward'].some(k => checkText.includes(k))
+  const isAmt = [
+    'amt', 'a/c maintenance', 'a/c structure', 'a/c cabin maintenance', 'a/c airframe',
+    'a/c avionics', 'a/c powerplant', 'aircraft mechanic', 'a/c machining', 'aircraft maintenance',
+    'aviation maintenance', 'aircraft technician', 'avionics', 'powerplant technician', 'airframe technician'
+  ].some(k => checkText.includes(k))
+
+  const subscribers = subsRes.rows.filter(r => {
+    const f = (r.role_filter || 'all').toLowerCase()
+    if (f === 'all') return true
+    if (f === 'pilot') return isPilot
+    if (f === 'cabin') return isCabin
+    if (f === 'amt') return isAmt
+    if (f === 'aviation' || f === 'crew') return isPilot || isCabin || isAmt
+    return true
+  }).map(r => r.chat_id)
+
+  if (subscribers.length === 0) {
+    return { sent: 0, total: 0, reason: 'No matching subscribers found for this announcement category' }
   }
 
   const renderUrl = config.public.renderAppUrl || 'https://et-results.onrender.com'

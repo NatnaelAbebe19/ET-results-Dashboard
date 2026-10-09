@@ -216,7 +216,13 @@ function formatDate(dateStr: string) {
                   <div class="text-muted" style="font-size: 11px;">Subscribed {{ formatDate(sub.subscribed_at) }}</div>
                 </div>
               </div>
-              <span class="badge badge-green">Active</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span v-if="sub.role_filter === 'pilot'" class="badge badge-blue">✈️ Pilot</span>
+                <span v-else-if="sub.role_filter === 'cabin'" class="badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">🧑‍✈️ Cabin</span>
+                <span v-else-if="sub.role_filter === 'amt'" class="badge" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.3);">🔧 AMT</span>
+                <span v-else-if="sub.role_filter === 'aviation' || sub.role_filter === 'crew'" class="badge badge-yellow">✈️🛠️ Aviation</span>
+                <span v-else class="badge badge-gray">🔔 All Results</span>
+              </div>
             </div>
           </div>
         </div>

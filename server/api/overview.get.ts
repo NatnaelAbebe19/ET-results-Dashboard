@@ -45,11 +45,35 @@ export default defineEventHandler(async (event) => {
 
     // 5. Recent subscribers
     const recentSubsRes = await query(`
-      SELECT chat_id::text, subscribed_at
+      SELECT chat_id::text, subscribed_at, COALESCE(role_filter, 'all') as role_filter
       FROM subscribers
       ORDER BY subscribed_at DESC
       LIMIT 5;
     `)
+
+    // 6. Subscriber positions breakdown
+    const roleCountsRes = await query<{ role_filter: string; count: string }>(`
+      SELECT COALESCE(role_filter, 'all') as role_filter, COUNT(*)::text as count
+      FROM subscribers
+      GROUP BY 1;
+    `)
+
+    const subscriberRoles: Record<string, number> = {
+      pilot: 0,
+      cabin: 0,
+      amt: 0,
+      aviation: 0,
+      all: 0
+    }
+    for (const r of roleCountsRes.rows) {
+      const f = (r.role_filter || 'all').toLowerCase()
+      const cnt = parseInt(r.count, 10) || 0
+      if (f === 'crew' || f === 'aviation') subscriberRoles.aviation = (subscriberRoles.aviation || 0) + cnt
+      else if (f === 'pilot') subscriberRoles.pilot = (subscriberRoles.pilot || 0) + cnt
+      else if (f === 'cabin') subscriberRoles.cabin = (subscriberRoles.cabin || 0) + cnt
+      else if (f === 'amt') subscriberRoles.amt = (subscriberRoles.amt || 0) + cnt
+      else subscriberRoles.all = (subscriberRoles.all || 0) + cnt
+    }
 
     return {
       ok: true,
@@ -57,7 +81,8 @@ export default defineEventHandler(async (event) => {
         totalSubscribers,
         totalTrackedResults,
         totalAnnouncements,
-        totalCandidates
+        totalCandidates,
+        subscriberRoles
       },
       typesBreakdown: typesRes.rows.map(r => ({
         type: r.announcement,

@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const res = await query(`
-      SELECT chat_id::text, subscribed_at
+      SELECT chat_id::text, subscribed_at, COALESCE(role_filter, 'all') as role_filter
       FROM subscribers
       ${whereClause}
       ORDER BY subscribed_at DESC;

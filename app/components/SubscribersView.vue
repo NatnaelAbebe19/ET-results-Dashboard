@@ -15,6 +15,63 @@ const isLoading = ref(false)
 const searchQuery = ref('')
 const newChatId = ref('')
 const isAdding = ref(false)
+const selectedRole = ref('all')
+const newSubscriberRole = ref('all')
+
+// Position / Role Counts for Distribution Breakdown
+const roleCounts = computed(() => {
+  const counts = {
+    total: subscribers.value.length,
+    pilot: 0,
+    cabin: 0,
+    amt: 0,
+    aviation: 0,
+    all: 0
+  }
+  for (const s of subscribers.value) {
+    const f = (s.role_filter || 'all').toLowerCase()
+    if (f === 'pilot') counts.pilot++
+    else if (f === 'cabin') counts.cabin++
+    else if (f === 'amt') counts.amt++
+    else if (f === 'aviation' || f === 'crew') counts.aviation++
+    else counts.all++
+  }
+  return counts
+})
+
+// Filtered list based on search and active position pill
+const filteredSubscribers = computed(() => {
+  if (selectedRole.value === 'all') return subscribers.value
+  return subscribers.value.filter(s => {
+    const f = (s.role_filter || 'all').toLowerCase()
+    if (selectedRole.value === 'aviation') return f === 'aviation' || f === 'crew'
+    if (selectedRole.value === 'general') return f === 'all'
+    return f === selectedRole.value
+  })
+})
+
+function getRoleLabel(role: string) {
+  const r = (role || 'all').toLowerCase()
+  if (r === 'pilot') return '✈️ Pilot Only'
+  if (r === 'cabin') return '🧑‍✈️ Cabin Crew'
+  if (r === 'amt') return '🔧 AMT Technicians'
+  if (r === 'aviation' || r === 'crew') return '✈️🛠️ All Aviation'
+  return '🔔 All Results'
+}
+
+async function updateSubscriberRole(chatId: string, newRole: string) {
+  try {
+    await $fetch('/api/subscribers', {
+      method: 'POST',
+      body: { chat_id: chatId, role_filter: newRole }
+    })
+    emit('toast', `Chat ID ${chatId} reassigned to ${getRoleLabel(newRole)}`, 'success')
+    const sub = subscribers.value.find(s => s.chat_id === chatId)
+    if (sub) sub.role_filter = newRole
+  } catch (err: any) {
+    emit('toast', `Failed to update position: ${err.message}`, 'error')
+  }
+}
 
 // Resolved Telegram profiles (auto-loaded)
 const profiles = ref<Record<string, { loading: boolean; data: any | null; error: string | null }>>({})
@@ -94,8 +151,11 @@ async function addSubscriber() {
   }
   isAdding.value = true
   try {
-    await $fetch('/api/subscribers', { method: 'POST', body: { chat_id: id } })
-    emit('toast', `Chat ID ${id} registered to subscribers!`, 'success')
+    await $fetch('/api/subscribers', {
+      method: 'POST',
+      body: { chat_id: id, role_filter: newSubscriberRole.value }
+    })
+    emit('toast', `Chat ID ${id} registered as ${getRoleLabel(newSubscriberRole.value)}!`, 'success')
     newChatId.value = ''
     fetchSubscribers()
   } catch (err: any) {
@@ -152,10 +212,10 @@ function copyChatId(chatId: string) {
 
 function exportCsv() {
   if (!subscribers.value.length) return
-  const headers = ['Chat_ID', 'Display_Name', 'Username', 'Type', 'Subscribed_At']
+  const headers = ['Chat_ID', 'Display_Name', 'Username', 'Type', 'Role_Filter', 'Subscribed_At']
   const rows = subscribers.value.map((s: any) => {
     const p = profiles.value[s.chat_id]?.data
-    return [s.chat_id, `"${p?.displayName || ''}"`, p?.username || '', p?.type || '', `"${s.subscribed_at || ''}"`]
+    return [s.chat_id, `"${p?.displayName || ''}"`, p?.username || '', p?.type || '', s.role_filter || 'all', `"${s.subscribed_at || ''}"`]
   })
   const csv = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
   const link = Object.assign(document.createElement('a'), { href: encodeURI(csv), download: 'et_subscribers.csv' })
@@ -237,14 +297,24 @@ defineExpose({ refresh: fetchSubscribers })
           </div>
         </div>
 
-        <div style="display: flex; gap: 8px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <input
             v-model="newChatId"
             type="text"
             placeholder="Chat ID (e.g. 123456789)"
-            style="flex: 1;"
+            style="flex: 1; min-width: 140px;"
             @keyup.enter="addSubscriber"
           />
+          <select
+            v-model="newSubscriberRole"
+            style="padding: 0 10px; font-size: 12px; font-weight: 500; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); background: var(--bg-surface-elevated); color: var(--text-primary);"
+          >
+            <option value="all">🔔 All Announcements</option>
+            <option value="pilot">✈️ Pilot Only</option>
+            <option value="cabin">🧑‍✈️ Cabin Crew</option>
+            <option value="amt">🔧 AMT Technicians</option>
+            <option value="aviation">✈️🛠️ All Aviation</option>
+          </select>
           <button class="btn btn-primary" :disabled="!newChatId || isAdding" @click="addSubscriber">
             <span>{{ isAdding ? 'Adding...' : 'Register' }}</span>
           </button>
@@ -352,6 +422,55 @@ defineExpose({ refresh: fetchSubscribers })
         </div>
       </div>
 
+      <!-- Position Filter Tabs (Breakdown by Position) -->
+      <div style="padding: 12px 24px; border-bottom: 1px solid var(--border-subtle); background: rgba(255,255,255,0.015); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <span style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-right: 4px;">
+          Position:
+        </span>
+        <button
+          class="btn btn-sm"
+          :style="selectedRole === 'all' ? 'background: var(--primary); color: white; border-color: var(--primary); font-weight: 600;' : 'background: var(--bg-surface-elevated); color: var(--text-secondary); border-color: var(--border-subtle);'"
+          @click="selectedRole = 'all'"
+        >
+          All ({{ roleCounts.total }})
+        </button>
+        <button
+          class="btn btn-sm"
+          :style="selectedRole === 'pilot' ? 'background: #2563eb; color: white; border-color: #2563eb; font-weight: 600;' : 'background: var(--bg-surface-elevated); color: var(--text-secondary); border-color: var(--border-subtle);'"
+          @click="selectedRole = 'pilot'"
+        >
+          ✈️ Pilot ({{ roleCounts.pilot }})
+        </button>
+        <button
+          class="btn btn-sm"
+          :style="selectedRole === 'cabin' ? 'background: #9333ea; color: white; border-color: #9333ea; font-weight: 600;' : 'background: var(--bg-surface-elevated); color: var(--text-secondary); border-color: var(--border-subtle);'"
+          @click="selectedRole = 'cabin'"
+        >
+          🧑‍✈️ Cabin Crew ({{ roleCounts.cabin }})
+        </button>
+        <button
+          class="btn btn-sm"
+          :style="selectedRole === 'amt' ? 'background: #0284c7; color: white; border-color: #0284c7; font-weight: 600;' : 'background: var(--bg-surface-elevated); color: var(--text-secondary); border-color: var(--border-subtle);'"
+          @click="selectedRole = 'amt'"
+        >
+          🔧 AMT ({{ roleCounts.amt }})
+        </button>
+        <button
+          class="btn btn-sm"
+          :style="selectedRole === 'aviation' ? 'background: #ca8a04; color: white; border-color: #ca8a04; font-weight: 600;' : 'background: var(--bg-surface-elevated); color: var(--text-secondary); border-color: var(--border-subtle);'"
+          @click="selectedRole = 'aviation'"
+        >
+          ✈️🛠️ All Aviation ({{ roleCounts.aviation }})
+        </button>
+        <button
+          class="btn btn-sm"
+          :style="selectedRole === 'general' ? 'background: #475569; color: white; border-color: #475569; font-weight: 600;' : 'background: var(--bg-surface-elevated); color: var(--text-secondary); border-color: var(--border-subtle);'"
+          @click="selectedRole = 'general'"
+        >
+          🔔 All Results ({{ roleCounts.all }})
+        </button>
+      </div>
+
       <!-- Loading State -->
       <div v-if="isLoading" style="text-align: center; padding: 50px 0;">
         <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid rgba(70,95,255,0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
@@ -359,10 +478,10 @@ defineExpose({ refresh: fetchSubscribers })
       </div>
 
       <!-- Empty State -->
-      <div v-else-if="!subscribers.length" style="text-align: center; padding: 60px 0;">
+      <div v-else-if="!filteredSubscribers.length" style="text-align: center; padding: 60px 0;">
         <div style="font-size: 32px; margin-bottom: 12px;">👥</div>
         <h3 style="font-size: 15px; color: var(--text-primary);">No subscribers found</h3>
-        <p class="text-muted" style="font-size: 13px; margin-top: 4px;">Users who send /start to @{{ botUsername }} will appear here automatically.</p>
+        <p class="text-muted" style="font-size: 13px; margin-top: 4px;">No users found for this position or search filter.</p>
       </div>
 
       <!-- Subscribers Table -->
@@ -374,12 +493,13 @@ defineExpose({ refresh: fetchSubscribers })
               <th>User Identity</th>
               <th>Chat ID</th>
               <th>Type</th>
+              <th>Position / Role</th>
               <th>Subscribed Date</th>
               <th style="text-align: right;">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(sub, idx) in subscribers" :key="sub.chat_id">
+            <tr v-for="(sub, idx) in filteredSubscribers" :key="sub.chat_id">
               <!-- Number -->
               <td class="text-muted font-mono" style="font-size: 12px;">{{ idx + 1 }}</td>
 
@@ -470,6 +590,41 @@ defineExpose({ refresh: fetchSubscribers })
                 <span v-else class="badge badge-gray">
                   {{ sub.chat_id.startsWith('-100') ? 'channel' : sub.chat_id.startsWith('-') ? 'group' : 'private' }}
                 </span>
+              </td>
+
+              <!-- Role Filter / Position Preference Badge & Quick Switcher -->
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span v-if="sub.role_filter === 'pilot'" class="badge badge-blue">
+                    ✈️ Pilot
+                  </span>
+                  <span v-else-if="sub.role_filter === 'cabin'" class="badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">
+                    🧑‍✈️ Cabin Crew
+                  </span>
+                  <span v-else-if="sub.role_filter === 'amt'" class="badge" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.3);">
+                    🔧 AMT
+                  </span>
+                  <span v-else-if="sub.role_filter === 'aviation' || sub.role_filter === 'crew'" class="badge badge-yellow">
+                    ✈️🛠️ All Aviation
+                  </span>
+                  <span v-else class="badge badge-gray">
+                    🔔 All
+                  </span>
+
+                  <!-- Quick Position Reassignment Dropdown -->
+                  <select
+                    :value="(sub.role_filter === 'crew' ? 'aviation' : sub.role_filter) || 'all'"
+                    @change="updateSubscriberRole(sub.chat_id, ($event.target as HTMLSelectElement).value)"
+                    title="Change target position for this subscriber"
+                    style="padding: 2px 6px; font-size: 11px; font-weight: 500; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); background: var(--bg-surface-elevated); color: var(--text-muted); cursor: pointer;"
+                  >
+                    <option value="all">🔔 All Results</option>
+                    <option value="pilot">✈️ Pilot Only</option>
+                    <option value="cabin">🧑‍✈️ Cabin Crew</option>
+                    <option value="amt">🔧 AMT Technicians</option>
+                    <option value="aviation">✈️🛠️ All Aviation</option>
+                  </select>
+                </div>
               </td>
 
               <!-- Subscribed Date -->
