@@ -183,13 +183,27 @@ async function sendBroadcastForAnnouncement(announcement: ParsedAnnouncement) {
   }
 
   const checkText = `${announcement.position} ${announcement.announcement || ''} ${announcement.description || ''}`.toLowerCase()
-  const isPilot = ['pilot', 'first officer', 'captain', 'cadet', 'cockpit'].some(k => checkText.includes(k))
-  const isCabin = ['cabin crew', 'flight attendant', 'air hostess', 'steward'].some(k => checkText.includes(k))
-  const isAmt = [
-    'amt', 'a/c maintenance', 'a/c structure', 'a/c cabin maintenance', 'a/c airframe',
-    'a/c avionics', 'a/c powerplant', 'aircraft mechanic', 'a/c machining', 'aircraft maintenance',
-    'aviation maintenance', 'aircraft technician', 'avionics', 'powerplant technician', 'airframe technician'
-  ].some(k => checkText.includes(k))
+  const nonAviationCaptainRemoved = checkText.replace(
+    /\b(?:bell|banquet|restaurant|dining|service|hotel|kitchen|bar|waiter|security|team)\s+captains?\b/g,
+    ''
+  )
+  const isPilot = (
+    /\b(?:co-?)?pilots?\b(?!\s+(?:project|program|study))|\bfirst\s+officers?\b|\bcadets?\b|\bcockpit\b/.test(checkText) ||
+    /\bcaptains?\b/.test(nonAviationCaptainRemoved)
+  )
+  const isCabin = (
+    ['cabin crew', 'flight attendant', 'air hostess', 'cabin attendant', 'flight steward', 'air steward', 'cabin steward']
+      .some(k => checkText.includes(k)) ||
+    /\bstewardess(?:es)?\b/.test(checkText)
+  )
+  const isAmt = (
+    [
+      'a/c maintenance', 'a/c structure', 'a/c cabin maintenance', 'a/c airframe',
+      'a/c avionics', 'a/c powerplant', 'aircraft mechanic', 'a/c machining', 'aircraft maintenance',
+      'aviation maintenance', 'aircraft technician', 'avionics', 'powerplant technician', 'airframe technician'
+    ].some(k => checkText.includes(k)) ||
+    /\bamts?\b/.test(checkText)
+  )
 
   const subscribers = subsRes.rows.filter(r => {
     const f = (r.role_filter || 'all').toLowerCase()
