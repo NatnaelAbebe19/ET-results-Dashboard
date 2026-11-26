@@ -227,7 +227,7 @@ async function sendBroadcastForAnnouncement(announcement: ParsedAnnouncement) {
     (announcement.announcement ? `📢 *Type:*\n${announcement.announcement}\n\n` : '') +
     (announcement.date_time ? `📅 *Date & Time:*\n${announcement.date_time}\n\n` : '')
 
-  const replyMarkup = {
+  const privateReplyMarkup = {
     inline_keyboard: [
       [
         { text: 'View Candidates', web_app: { url: viewerUrl } },
@@ -236,8 +236,19 @@ async function sendBroadcastForAnnouncement(announcement: ParsedAnnouncement) {
     ]
   }
 
+  // Telegram does not allow web_app buttons in channels or groups (negative chat IDs)
+  const channelReplyMarkup = {
+    inline_keyboard: [
+      [
+        { text: 'View Candidates', url: viewerUrl },
+        { text: 'Visit Official Site', url: 'https://corporate.ethiopianairlines.com/AboutEthiopian/careers/results' }
+      ]
+    ]
+  }
+
   let sent = 0
   for (const chatId of subscribers) {
+    const isGroupOrChannel = String(chatId).trim().startsWith('-')
     try {
       await $fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
@@ -245,7 +256,8 @@ async function sendBroadcastForAnnouncement(announcement: ParsedAnnouncement) {
           chat_id: chatId,
           text: messageText,
           parse_mode: 'Markdown',
-          reply_markup: replyMarkup
+          reply_markup: isGroupOrChannel ? channelReplyMarkup : privateReplyMarkup,
+          disable_web_page_preview: true
         }
       })
       sent++

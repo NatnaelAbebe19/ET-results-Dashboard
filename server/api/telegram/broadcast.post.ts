@@ -43,16 +43,17 @@ export default defineEventHandler(async (event) => {
   }
 
   // Build inline keyboard if button requested
-  let replyMarkup: any = undefined
-  if (buttonText && buttonUrl) {
-    if (isWebApp) {
-      replyMarkup = {
+  // Note: Telegram rejects web_app buttons in channels/groups (negative chat IDs)
+  const buildReplyMarkup = (chatId: string) => {
+    if (!buttonText || !buttonUrl) return undefined
+    const isGroupOrChannel = String(chatId).trim().startsWith('-')
+    if (isWebApp && !isGroupOrChannel) {
+      return {
         inline_keyboard: [[{ text: buttonText, web_app: { url: buttonUrl } }]]
       }
-    } else {
-      replyMarkup = {
-        inline_keyboard: [[{ text: buttonText, url: buttonUrl }]]
-      }
+    }
+    return {
+      inline_keyboard: [[{ text: buttonText, url: buttonUrl }]]
     }
   }
 
@@ -68,7 +69,7 @@ export default defineEventHandler(async (event) => {
           chat_id: chatId,
           text: message,
           parse_mode: 'Markdown',
-          reply_markup: replyMarkup,
+          reply_markup: buildReplyMarkup(chatId),
           disable_web_page_preview: true
         }
       })
